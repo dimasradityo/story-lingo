@@ -1,5 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Brain, MessageSquare, FileText } from "lucide-react";
 
 interface AnalysisPanelProps {
@@ -29,25 +33,39 @@ export const AnalysisPanel = ({ hasStory }: AnalysisPanelProps) => {
 
         <ScrollArea className="flex-1">
           <TabsContent value="analysis" className="p-6 m-0">
-            {hasStory ? (
+            <div className="space-y-6">
               <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Story Analysis</h3>
-                <p className="text-muted-foreground text-sm">
-                  Analysis tools will help you understand vocabulary, grammar patterns, and sentence structure.
-                </p>
-                <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                  <p className="text-sm text-muted-foreground italic">
-                    Analysis features coming soon...
-                  </p>
-                </div>
+                <Label htmlFor="sentence-input" className="text-base">
+                  Paste a sentence you don't understand:
+                </Label>
+                <Textarea 
+                  id="sentence-input"
+                  placeholder="e.g., 我喜欢去公园。"
+                  className="min-h-[100px]"
+                />
+                <Button className="w-full sm:w-auto">
+                  Analyze Sentence
+                </Button>
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full min-h-[200px]">
-                <p className="text-muted-foreground text-sm">
-                  Generate a story to see analysis tools
-                </p>
-              </div>
-            )}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Analysis Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm">
+                      <span className="font-bold">Translation:</span> Placeholder: This is my weekend.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm">
+                      <span className="font-bold">Grammar:</span> Placeholder: [Sentence breakdown will appear here...]
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="questions" className="p-6 m-0">
