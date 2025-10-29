@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Brain, MessageSquare, FileText } from "lucide-react";
 
 interface AnalysisPanelProps {
@@ -69,47 +70,67 @@ export const AnalysisPanel = ({ hasStory }: AnalysisPanelProps) => {
           </TabsContent>
 
           <TabsContent value="questions" className="p-6 m-0">
-            {hasStory ? (
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Practice Questions</h3>
-                <p className="text-muted-foreground text-sm">
-                  Test your understanding with comprehension questions based on the story.
-                </p>
-                <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                  <p className="text-sm text-muted-foreground italic">
-                    Question generation coming soon...
+            <div className="space-y-6">
+              <Button className="w-full sm:w-auto">
+                Generate 5 Questions
+              </Button>
+
+              <div className="space-y-6">
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <div key={num} className="space-y-2">
+                    <Label className="text-sm font-normal text-muted-foreground">
+                      {num}. [Placeholder for question {num}...]
+                    </Label>
+                    <Input placeholder="Type your answer here..." />
+                  </div>
+                ))}
+              </div>
+
+              <Button variant="secondary" className="w-full sm:w-auto">
+                Review My Answers
+              </Button>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Feedback</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Your review will appear here...
                   </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full min-h-[200px]">
-                <p className="text-muted-foreground text-sm">
-                  Generate a story to see practice questions
-                </p>
-              </div>
-            )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="discussion" className="p-6 m-0">
-            {hasStory ? (
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg">Open Discussion</h3>
-                <p className="text-muted-foreground text-sm">
-                  Practice your Chinese with open-ended questions about the story.
-                </p>
-                <div className="bg-muted/50 rounded-lg p-4 border border-border">
-                  <p className="text-sm text-muted-foreground italic">
-                    Discussion prompts coming soon...
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full min-h-[200px]">
-                <p className="text-muted-foreground text-sm">
-                  Generate a story to see discussion topics
-                </p>
-              </div>
-            )}
+            <div className="space-y-6">
+              <Button className="w-full sm:w-auto">
+                Generate 3 Open Questions
+              </Button>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <ol className="space-y-3 list-decimal list-inside">
+                    <li className="text-sm text-muted-foreground">
+                      [Placeholder for open question 1...]
+                    </li>
+                    <li className="text-sm text-muted-foreground">
+                      [Placeholder for open question 2...]
+                    </li>
+                    <li className="text-sm text-muted-foreground">
+                      [Placeholder for open question 3...]
+                    </li>
+                  </ol>
+                </CardContent>
+              </Card>
+
+              <Textarea 
+                placeholder="Practice writing your answers here..."
+                className="min-h-[200px]"
+                rows={8}
+              />
+            </div>
           </TabsContent>
         </ScrollArea>
       </Tabs>
