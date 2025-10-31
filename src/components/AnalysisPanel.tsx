@@ -60,6 +60,7 @@ export const AnalysisPanel = ({ story }: AnalysisPanelProps) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
             sentence: sentenceInput,
@@ -125,6 +126,7 @@ export const AnalysisPanel = ({ story }: AnalysisPanelProps) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
             sentence: followUpQuestion,
