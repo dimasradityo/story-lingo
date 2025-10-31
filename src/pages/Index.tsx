@@ -5,28 +5,57 @@ import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { Languages } from "lucide-react";
 import { toast } from "sonner";
 
+interface StoryData {
+  hanzi: string;
+  pinyin: string;
+  error?: string;
+}
+
 const Index = () => {
-  const [story, setStory] = useState<string | null>(null);
+  const [story, setStory] = useState<StoryData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerateStory = async (level: string, topic: string) => {
     setIsLoading(true);
     
-    // Simulate API call - replace with actual implementation later
-    setTimeout(() => {
-      const sampleStory = `这是一个关于中国文化的故事。小明是一个学生，他每天都去学校学习。今天是星期一，天气很好。小明很高兴，因为他要和朋友们一起去公园玩。
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-story`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            hskLevel: level,
+            topic: topic || '',
+          }),
+        }
+      );
 
-在公园里，他们看到了很多美丽的花。小明的朋友小红说："这些花真漂亮！"小明说："是的，我们拍几张照片吧。"
+      if (!response.ok) {
+        throw new Error('Failed to generate story');
+      }
 
-他们在公园里玩了很长时间，玩得很开心。下午四点，他们回家了。小明觉得今天是很好的一天。`;
+      const data: StoryData = await response.json();
       
-      setStory(sampleStory);
-      setIsLoading(false);
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setStory(data);
       
       toast.success("Story generated successfully!", {
         description: `Generated for ${level}${topic ? ` about "${topic}"` : ""}`,
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Error generating story:', error);
+      toast.error("Failed to generate story", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
