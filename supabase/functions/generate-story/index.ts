@@ -29,18 +29,24 @@ Requirements:
 1. Use vocabulary and grammar appropriate for ${hskLevel}
 2. The story must be at least 200 characters long.
 3. Make it engaging and educational
-4. Return your response as a single JSON object with exactly two fields:
-   - "hanzi": The entire story written in Chinese characters (汉字), with paragraphs separated by double newlines (\n\n).
-   - "pinyin": The same story written in pinyin with tone marks, matching the paragraph and sentence structure of the hanzi field, also separated by double newlines (\n\n).
-5. Do NOT return multiple JSON objects, arrays, or any extra text. Only return a single JSON object with the two fields above.
+4. CRITICAL: Return your response as ONE SINGLE JSON object with exactly two fields:
+   - "hanzi": The ENTIRE story (all paragraphs combined) in Chinese characters, with paragraphs separated by double newlines (\n\n)
+   - "pinyin": The ENTIRE story (all paragraphs combined) in pinyin with tone marks, with paragraphs separated by double newlines (\n\n)
 
-Example format:
+5. IMPORTANT:
+   - Return ONLY ONE JSON object, NOT multiple JSON objects
+   - Put ALL paragraphs inside the "hanzi" field, separated by \n\n
+   - Put ALL paragraphs inside the "pinyin" field, separated by \n\n
+   - Do NOT return an array of objects
+   - Do NOT return separate JSON objects for each paragraph
+
+Example format (notice ALL paragraphs are in ONE object):
 {
-"hanzi": "第一段内容。\n\n第二段内容。\n\n第三段内容。\n\n第四段内容。",
-"pinyin": "Dì yī duàn nèiróng.\n\nDì èr duàn nèiróng.\n\nDì sān duàn nèiróng.\n\nDì sì duàn nèiróng."
+  "hanzi": "李明是一个学生。他每天早上七点起床。\n\n他喜欢吃早饭。今天他吃了面包和牛奶。\n\n吃完早饭，他去学校上课。他很喜欢学习中文。",
+  "pinyin": "Lǐ Míng shì yīgè xuéshēng. Tā měitiān zǎoshang qī diǎn qǐchuáng.\n\nTā xǐhuan chī zǎofàn. Jīntiān tā chīle miànbāo hé niúnǎi.\n\nChī wán zǎofàn, tā qù xuéxiào shàngkè. Tā hěn xǐhuan xuéxí Zhōngwén."
 }
 
-Only return the JSON, no additional text.`;
+Only return the JSON, no additional text. Remember: ONE object with ALL paragraphs inside!`;
 
 
     // Models to try in order
@@ -95,8 +101,49 @@ Only return the JSON, no additional text.`;
       }
       try {
         // Remove any markdown code blocks if present
-        const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        storyData = JSON.parse(cleanContent);
+        let cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+        // Check if there are multiple JSON objects (separated by newlines or whitespace)
+        // This handles the case where LLM returns multiple objects instead of one
+        const jsonObjects = [];
+        let currentPos = 0;
+
+        while (currentPos < cleanContent.length) {
+          const trimmed = cleanContent.slice(currentPos).trim();
+          if (!trimmed) break;
+
+          try {
+            // Try to parse JSON from current position
+            const parsed = JSON.parse(trimmed);
+            jsonObjects.push(parsed);
+            break; // If we successfully parsed the entire string, we're done
+          } catch (e) {
+            // If parsing fails, try to find individual JSON objects
+            const match = trimmed.match(/^\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
+            if (match) {
+              const obj = JSON.parse(match[0]);
+              jsonObjects.push(obj);
+              currentPos += cleanContent.indexOf(match[0], currentPos) + match[0].length;
+            } else {
+              break;
+            }
+          }
+        }
+
+        // If we found multiple JSON objects, merge them
+        if (jsonObjects.length > 1) {
+          console.log(`Found ${jsonObjects.length} JSON objects, merging them...`);
+          const mergedHanzi = jsonObjects.map(obj => obj.hanzi || '').filter(Boolean).join('\n\n');
+          const mergedPinyin = jsonObjects.map(obj => obj.pinyin || '').filter(Boolean).join('\n\n');
+          storyData = {
+            hanzi: mergedHanzi,
+            pinyin: mergedPinyin
+          };
+        } else if (jsonObjects.length === 1) {
+          storyData = jsonObjects[0];
+        } else {
+          throw new Error('No valid JSON found');
+        }
       } catch (parseError) {
         console.error('Failed to parse LLM response as JSON:', content);
         // Fallback: use the content as hanzi and generate basic pinyin placeholder
