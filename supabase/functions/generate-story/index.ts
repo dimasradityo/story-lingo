@@ -22,12 +22,12 @@ serve(async (req) => {
     }
 
     // Construct the prompt
-    const topicText = topic ? `about "${topic}"` : "about daily life in China";
+    const topicText = topic ? `about "${topic}"` : "about any random topic you can think of";
     const prompt = `You are a Chinese language teacher. Generate a short story in Chinese suitable for ${hskLevel} students ${topicText}.
 
 Requirements:
 1. Use vocabulary and grammar appropriate for ${hskLevel}
-2. Keep the story between 100-200 characters
+2. The story must be at least 4 paragraphs, with each paragraph having 4-5 sentences.
 3. Make it engaging and educational
 4. Return your response in JSON format with two fields:
    - "hanzi": The story written in Chinese characters (汉字)
