@@ -32,6 +32,7 @@ Requirements:
 4. Return your response in JSON format with two fields:
    - "hanzi": The story written in Chinese characters (汉字)
    - "pinyin": The same story written in pinyin with tone marks
+5. Only return the JSON object with the 2 fields specified above. So if it's 4 paragraphs, all 4 paragraphs should be included in the "hanzi" field and the "pinyin" field, not making separate fields for each paragraph.
 
 Example format:
 {
