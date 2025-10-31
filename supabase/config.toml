@@ -2,3 +2,6 @@ project_id = "wjfypbeccjnuolowrwwa"
 
 [functions.generate-story]
 verify_jwt = false
+
+[functions.analyze-sentence]
+verify_jwt = false

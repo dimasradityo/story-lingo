@@ -88,7 +88,7 @@ const Index = () => {
 
           {/* Right Column - Analysis Panel (60%) */}
           <div className="w-[60%] h-full">
-            <AnalysisPanel hasStory={!!story} />
+            <AnalysisPanel story={story} />
           </div>
         </div>
       </main>
