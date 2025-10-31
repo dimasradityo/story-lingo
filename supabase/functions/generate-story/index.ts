@@ -29,15 +29,15 @@ Requirements:
 1. Use vocabulary and grammar appropriate for ${hskLevel}
 2. The story must be at least 4 paragraphs, with each paragraph having 4-5 sentences.
 3. Make it engaging and educational
-4. Return your response in JSON format with two fields:
-   - "hanzi": The story written in Chinese characters (汉字)
-   - "pinyin": The same story written in pinyin with tone marks
-5. Only return the JSON object with the 2 fields specified above. So if it's 4 paragraphs, all 4 paragraphs should be included in the "hanzi" field and the "pinyin" field, not making separate fields for each paragraph.
+4. Return your response as a single JSON object with exactly two fields:
+   - "hanzi": The entire story written in Chinese characters (汉字), with paragraphs separated by double newlines (\n\n).
+   - "pinyin": The same story written in pinyin with tone marks, matching the paragraph and sentence structure of the hanzi field, also separated by double newlines (\n\n).
+5. Do NOT return multiple JSON objects, arrays, or any extra text. Only return a single JSON object with the two fields above.
 
 Example format:
 {
-  "hanzi": "今天天气很好。小明去公园玩。",
-  "pinyin": "Jīntiān tiānqì hěn hǎo. Xiǎo míng qù gōngyuán wán."
+"hanzi": "第一段内容。\n\n第二段内容。\n\n第三段内容。\n\n第四段内容。",
+"pinyin": "Dì yī duàn nèiróng.\n\nDì èr duàn nèiróng.\n\nDì sān duàn nèiróng.\n\nDì sì duàn nèiróng."
 }
 
 Only return the JSON, no additional text.`;
