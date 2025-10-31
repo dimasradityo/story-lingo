@@ -1,7 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-// Import pinyin conversion library
-import { pinyin } from "https://esm.sh/pinyin-pro@3.3.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,7 +21,7 @@ serve(async (req) => {
       throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
-    // Simplified prompt - only ask for Chinese text
+    // Simplified prompt - just generate the story naturally
     const topicText = topic ? `about "${topic}"` : "about any random topic you can think of";
     const prompt = `You are a Chinese language teacher. Generate a short story in Chinese suitable for ${hskLevel} students ${topicText}.
 
@@ -31,27 +29,23 @@ Requirements:
 1. Use vocabulary and grammar appropriate for ${hskLevel}
 2. The story must be at least 200 characters long and have 3-5 paragraphs
 3. Make it engaging and educational
-4. Write ONLY in Chinese characters (汉字)
-5. Separate paragraphs with double newlines
 
-IMPORTANT: Return ONLY the Chinese story text, no JSON, no explanations, no markdown, just the story.
+Respond with a JSON object with these two fields:
+- "hanzi": the story in Chinese characters, with paragraphs separated by \\n\\n
+- "pinyin": the same story in pinyin with tone marks, with paragraphs separated by \\n\\n
 
-Example output format:
-李明是一个学生。他每天早上七点起床。他住在北京。
-
-他喜欢吃早饭。今天他吃了面包和牛奶。早饭很好吃。
-
-吃完早饭，他去学校上课。他很喜欢学习中文。`;
+Just return the JSON, nothing else.`;
 
     // Models to try in order
     const models = [
-      'meta-llama/llama-4-scout:free',
+      'google/gemini-2.0-flash-exp:free',
+      'qwen/qwen3-235b-a22b:free',
       'mistralai/mistral-small-3.2-24b-instruct:free',
       'deepseek/deepseek-chat-v3-0324:free',
     ];
 
     let lastError = null;
-    let hanziText = null;
+    let storyData = null;
 
     for (const model of models) {
       console.log(`Calling OpenRouter API with model: ${model}`);
@@ -95,35 +89,85 @@ Example output format:
         continue;
       }
 
-      // Clean the content - remove any markdown, JSON formatting, etc.
-      let cleanContent = content
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .replace(/^\{.*?"hanzi":\s*"/gm, '')
-        .replace(/"\s*,?\s*"pinyin".*?\}$/gm, '')
-        .trim();
+      // Robust parsing that handles multiple formats
+      try {
+        // Clean up the content
+        let cleanContent = content.trim();
 
-      // Extract only Chinese text (filter out any English explanations)
-      const chineseOnly = cleanContent
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => {
-          // Keep lines that contain Chinese characters
-          return /[\u4e00-\u9fff]/.test(line);
-        })
-        .join('\n');
+        // Remove markdown code blocks
+        cleanContent = cleanContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
 
-      if (chineseOnly.length > 100) { // Ensure we got substantial content
-        hanziText = chineseOnly;
-        break; // Success, exit the model loop
-      } else {
-        console.log('Content too short or invalid, trying next model');
-        lastError = { status: 'invalid_content', text: 'Story too short or invalid' };
-        continue;
+        // Try to extract all JSON objects from the response
+        const jsonObjects: Array<{hanzi?: string, pinyin?: string}> = [];
+
+        // Method 1: Try parsing the whole thing as JSON
+        try {
+          const parsed = JSON.parse(cleanContent);
+          if (parsed.hanzi || parsed.pinyin) {
+            jsonObjects.push(parsed);
+          }
+        } catch {
+          // Method 2: Find all JSON objects in the text
+          const jsonRegex = /\{[^{}]*(?:"hanzi"|"pinyin")[^{}]*(?:"hanzi"|"pinyin")[^{}]*\}/g;
+          const matches = cleanContent.match(jsonRegex);
+
+          if (matches) {
+            for (const match of matches) {
+              try {
+                const parsed = JSON.parse(match);
+                if (parsed.hanzi || parsed.pinyin) {
+                  jsonObjects.push(parsed);
+                }
+              } catch {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+
+        console.log(`Found ${jsonObjects.length} JSON objects`);
+
+        if (jsonObjects.length === 0) {
+          throw new Error('No valid JSON found');
+        }
+
+        // Merge all objects
+        const allHanzi: string[] = [];
+        const allPinyin: string[] = [];
+
+        for (const obj of jsonObjects) {
+          if (obj.hanzi) {
+            allHanzi.push(obj.hanzi.trim());
+          }
+          if (obj.pinyin) {
+            allPinyin.push(obj.pinyin.trim());
+          }
+        }
+
+        const mergedHanzi = allHanzi.join('\n\n');
+        const mergedPinyin = allPinyin.join('\n\n');
+
+        // Validate we got content
+        if (mergedHanzi.length < 100) {
+          throw new Error('Story too short');
+        }
+
+        storyData = {
+          hanzi: mergedHanzi,
+          pinyin: mergedPinyin || 'Pinyin not generated'
+        };
+
+        console.log('Successfully parsed story');
+        break; // Success!
+
+      } catch (parseError) {
+        console.error('Parse error:', parseError);
+        lastError = { status: 'parse_error', text: String(parseError) };
+        continue; // Try next model
       }
     }
 
-    if (!hanziText) {
+    if (!storyData) {
       // All models failed
       const errorMsg = lastError ? `Failed to generate story: ${lastError.status} - ${lastError.text}` : 'Unknown error';
       return new Response(
@@ -139,40 +183,10 @@ Example output format:
       );
     }
 
-    // Generate pinyin from the Chinese text using pinyin-pro library
-    console.log('Converting to pinyin...');
-    try {
-      const pinyinText = pinyin(hanziText, {
-        toneType: 'symbol', // Use tone marks (ā, á, ǎ, à)
-        type: 'all', // Convert everything
-        separator: '', // No separator between characters
-      });
-
-      const storyData = {
-        hanzi: hanziText,
-        pinyin: pinyinText
-      };
-
-      console.log('Story generated successfully with pinyin conversion');
-      return new Response(JSON.stringify(storyData), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-
-    } catch (pinyinError) {
-      console.error('Pinyin conversion error:', pinyinError);
-      // Return story with hanzi only if pinyin conversion fails
-      return new Response(
-        JSON.stringify({
-          hanzi: hanziText,
-          pinyin: 'Pinyin conversion failed',
-          error: 'Pinyin conversion error'
-        }),
-        {
-          status: 200, // Still return 200 since we have the story
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    console.log('Story generated successfully');
+    return new Response(JSON.stringify(storyData), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
     console.error('Error in generate-story function:', error);
