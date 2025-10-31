@@ -44,9 +44,9 @@ Only return the JSON, no additional text.`;
 
     // Models to try in order
     const models = [
+      'qwen/qwen3-4b:free',
       'deepseek/deepseek-chat-v3-0324:free',
       'meta-llama/llama-4-scout:free',
-      'qwen/qwen3-4b:free',
     ];
 
     let lastError = null;
