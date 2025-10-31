@@ -27,7 +27,7 @@ serve(async (req) => {
 
 Requirements:
 1. Use vocabulary and grammar appropriate for ${hskLevel}
-2. The story must be at least 4 paragraphs, with each paragraph having 4-5 sentences.
+2. The story must be at least 200 characters long.
 3. Make it engaging and educational
 4. Return your response as a single JSON object with exactly two fields:
    - "hanzi": The entire story written in Chinese characters (汉字), with paragraphs separated by double newlines (\n\n).
