@@ -26,9 +26,10 @@ export const StoryGenerator = ({ onGenerate }: StoryGeneratorProps) => {
   };
 
   return (
-    <div className="border-b border-border bg-gradient-to-r from-background to-muted/30 p-6 shadow-sm">
+    <div className="border-b border-border bg-gradient-to-r from-background to-muted/30 shadow-sm">
       <div className="mx-auto max-w-6xl">
-        <div className="flex flex-wrap items-end gap-4">
+        {/* Desktop Layout */}
+        <div className="hidden lg:flex items-end gap-4 p-6">
           <div className="flex-1 min-w-[200px]">
             <Label htmlFor="hsk-level" className="text-sm font-medium mb-2 block">
               HSK Level
@@ -71,6 +72,48 @@ export const StoryGenerator = ({ onGenerate }: StoryGeneratorProps) => {
             <Sparkles className="mr-2 h-4 w-4" />
             Generate Story
           </Button>
+        </div>
+
+        {/* Mobile Compact Layout */}
+        <div className="lg:hidden p-3">
+          <div className="flex items-center gap-2">
+            {/* HSK Select - Compact */}
+            <div className="flex-none w-24">
+              <Select value={hskLevel} onValueChange={setHskLevel}>
+                <SelectTrigger id="hsk-level-mobile" className="h-9 text-xs bg-background">
+                  <SelectValue placeholder="HSK" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="HSK 1">HSK 1</SelectItem>
+                  <SelectItem value="HSK 2">HSK 2</SelectItem>
+                  <SelectItem value="HSK 3">HSK 3</SelectItem>
+                  <SelectItem value="HSK 4">HSK 4</SelectItem>
+                  <SelectItem value="HSK 5">HSK 5</SelectItem>
+                  <SelectItem value="HSK 6">HSK 6</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Topic Input - Flexible */}
+            <Input
+              id="topic-mobile"
+              type="text"
+              placeholder="Topic (optional)"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              className="flex-1 h-9 text-xs"
+            />
+
+            {/* Generate Button - Icon Only */}
+            <Button
+              onClick={handleGenerate}
+              disabled={!hskLevel}
+              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 flex-none"
+              size="icon"
+            >
+              <Sparkles className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
