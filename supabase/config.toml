@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.analyze-sentence]
 verify_jwt = false
+
+[functions.comprehension-questions]
+verify_jwt = false
